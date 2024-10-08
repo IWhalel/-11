@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Mediterm</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+  <link href="https://fonts.googleapis.com/css?family=Arimo:400,700|Open+Sans:400,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://anandchowdhary.github.io/ionicons-3-cdn/icons.css" integrity="sha384-+iqgM+tGle5wS+uPwXzIjZS5v6VkqCUV7YQ/e/clzRHAxYbzpUJ+nldylmtBWCP0" crossorigin="anonymous">
+  <link rel="stylesheet" href="./style.css">
+  <style>
+    body {
+      font-family: 'Open Sans', sans-serif;
+      background-color: #f4f4f9;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .today-box {
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .today-box .breadcrumb {
+      cursor: pointer;
+      font-weight: bold;
+      color: #007bff;
+    }
+    .plus-icon {
+      cursor: pointer;
+      color: #007bff;
+      font-size: 24px;
+    }
+    .date-title {
+      flex-grow: 1;
+      text-align: center;
+    }
+    .upcoming-events, .water-record {
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      margin-top: 20px;
+    }
+    .events-wrapper, #calendar {
+      margin-top: 15px;
+    }
+    .event {
+      border-bottom: 1px solid #eaeaea;
+      padding: 10px 0;
+      display: flex;
+      align-items: center;
+    }
+    .event h4 {
+      margin: 0 10px;
+      font-weight: 600;
+    }
+    .calendar {
+      display: none;
+      margin-top: 20px;
+    }
+    .calendar table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    .calendar th, .calendar td {
+      border: 1px solid #ccc;
+      text-align: center;
+      padding: 10px;
+      cursor: pointer;
+    }
+    .calendar td:hover {
+      background-color: #e0f7fa;
+    }
+    .water-record input {
+      margin-right: 10px;
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      width: 100px;
+    }
+    .water-record button {
+      padding: 10px 15px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .water-record button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div class="mobile-wrapper">
+    <header class="header">
+      <h1>Mediterm</h1>
+      <span>Welcome Back!</span>
+    </header>
+
+    <section class="today-box" id="today-box">
+      <span class="breadcrumb" onclick="showCalendar()">Today</span>
+      <h3 class="date-title" id="current-date"></h3>
+      <div class="plus-icon" onclick="showEventForm()">
+        <i class="ion ion-ios-add"></i>
+      </div>
+    </section>
+
+    <section class="upcoming-events">
+      <h3>Latest Events</h3>
+      <div class="events-wrapper" id="events-wrapper">
+        <!-- Events will be added here -->
+      </div>
+      <div id="event-form" style="display: none;">
+        <input type="text" id="event-title" placeholder="Event Title" required>
+        <input type="time" id="event-time" required>
+        <button onclick="addEvent()">Add Event</button>
+        <button onclick="hideEventForm()">Cancel</button>
+      </div>
+    </section>
+
+    <section class="water-record" id="water-record">
+      <h3>Water Reminder</h3>
+      <input type="number" id="water-amount" placeholder="Amount in ml" required>
+      <input type="time" id="water-time" required>
+      <button onclick="addWaterRecord()">Add Water Record</button>
+    </section>
+
+    <div class="calendar" id="calendar">
+      <h3>Calendar</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Sun</th>
+            <th>Mon</th>
+            <th>Tue</th>
+            <th>Wed</th>
+            <th>Thu</th>
+            <th>Fri</th>
+            <th>Sat</th>
+          </tr>
+        </thead>
+        <tbody id="calendar-body">
+          <!-- Calendar will be generated here -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // 현재 날짜 자동 업데이트
+    const today = new Date();
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    document.getElementById('current-date').textContent = today.toLocaleDateString('en-US', options);
+
+    // 이벤트 폼 표시
+    function showEventForm() {
+      document.getElementById('event-form').style.display = 'block';
+    }
+
+    // 이벤트 폼 숨기기
+    function hideEventForm() {
+      document.getElementById('event-form').style.display = 'none';
+      document.getElementById('event-title').value = '';
+      document.getElementById('event-time').value = '';
+    }
+
+    // 이벤트 추가 함수
+    function addEvent() {
+      const title = document.getElementById('event-title').value;
+      const time = document.getElementById('event-time').value;
+
+      if (title && time) {
+        const eventsWrapper = document.getElementById('events-wrapper');
+        const newEvent = document.createElement('div');
+        newEvent.className = 'event';
+        newEvent.innerHTML = `
+          <i class="ion ion-ios-flame"></i>
+          <h4 class="event__point">${title} at ${time}</h4>
+          <p class="event__description">Alarm set for this time.</p>
+        `;
+        eventsWrapper.appendChild(newEvent);
+
+        // 알람 설정
+        setAlarm(title, time);
+        hideEventForm();
+      } else {
+        alert('Please enter both the title and time for the event.');
+      }
+    }
+
+    // 알람 설정 함수
+    function setAlarm(title, time) {
+      const now = new Date();
+      const [hours, minutes] = time.split(':').map(Number);
+      const alarmTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes);
+
+      // 알람이 과거인 경우, 다음 날로 설정
+      if (alarmTime <= now) {
+        alarmTime.setDate(alarmTime.getDate() + 1);
+      }
+
+      const timeUntilAlarm = alarmTime - now;
+      setTimeout(() => {
+        alert(`Alarm! It's time for: ${title}`);
+      }, timeUntilAlarm);
+    }
+
+    // 캘린더 표시
+    function showCalendar() {
+      const calendar = document.getElementById('calendar');
+      const calendarBody = document.getElementById('calendar-body');
+      calendar.style.display = 'block';
+
+      // 이전 달의 마지막 날짜와 현재 달의 첫 번째 날짜를 계산합니다.
+      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+      const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+      const totalDays = lastDay.getDate();
+      const startDay = firstDay.getDay();
+
+      // 달력 그리기
+      let calendarHTML = '';
+      let day = 1;
+
+      // 빈 셀 추가
+      for (let i = 0; i < startDay; i++) {
+        calendarHTML += '<td></td>';
+      }
+
+      // 날짜 추가
+      for (let i = startDay; i < 7; i++) {
+        if (day <= totalDays) {
+          calendarHTML += `<td onclick="showWaterRecords(${day})">${day}</td>`;
+          day++;
+        }
+      }
+
+      // 나머지 주 추가
+      while (day <= totalDays) {
+        calendarHTML += '<tr>';
+        for (let i = 0; i < 7; i++) {
+          if (day <= totalDays) {
+            calendarHTML += `<td onclick="showWaterRecords(${day})">${day}</td>`;
+            day++;
+          } else {
+            calendarHTML += '<td></td>';
+          }
+        }
+        calendarHTML += '</tr>';
+      }
+
+      calendarBody.innerHTML = calendarHTML;
+    }
+
+    // 물 기록 추가 함수
+    function addWaterRecord() {
+      const amount = document.getElementById('water-amount').value;
+      const time = document.getElementById('water-time').value;
+
+      if (amount && time) {
+        const selectedDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const waterRecords = JSON.parse(localStorage.getItem(selectedDate.toDateString())) || [];
+        waterRecords.push({ time, amount });
+        localStorage.setItem(selectedDate.toDateString(), JSON.stringify(waterRecords));
+
+        document.getElementById('water-amount').value = '';
+        document.getElementById('water-time').value = '';
+        alert(`Added ${amount}ml of water at ${time}`);
+      } else {
+        alert('Please enter both the amount and time for the water record.');
+      }
+    }
+
+    // 선택된 날짜의 물 기록 표시 함수
+    function showWaterRecords(day) {
+      const selectedDate = new Date(today.getFullYear(), today.getMonth(), day);
+      const waterRecords = JSON.parse(localStorage.getItem(selectedDate.toDateString())) || [];
+      let records = '';
+
+      if (waterRecords.length === 0) {
+        records = 'No water records for this day.';
+      } else {
+        records = waterRecords.map(record => `Drank ${record.amount}ml at ${record.time}`).join('<br>');
+      }
+
+      alert(`Water Records for ${selectedDate.toDateString()}:\n${records}`);
+    }
+  </script>
+
+  <script src="./script.js"></script>
+</body>
+</html>
